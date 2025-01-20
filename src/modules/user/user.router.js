@@ -3,37 +3,45 @@ import bcrypt from "bcryptjs"
 import jwt from 'jsonwebtoken';
 
 import UserModel from "../../../DB/model/user.model.js";
-import { where } from "sequelize";
 const router = Router();
 
 router.get('/', async (req, res) => {
-    const users = await UserModel.findAll();
+    const {token} = req.headers;
+
+    const decoded = jwt.verify(token,'asma');
+    if(decoded.role != 'admin'){
+        return res.status(400).json({message:'not authorized'});
+    }
+
+
+    const users = await UserModel.findAll({
+        attributes:['id','userName','email']
+    });
     return res.status(200).json({ message: "success", users });
 });
 
-router.post('/', async (req, res) => {
-    const { userName, email, password } = req.body;
-    const hashPassword = bcrypt.hashSync(password, 8);
+router.delete('/:id',async(req,res)=>{
+    const {id} = req.params;
+    const {token} = req.headers;
 
-    await UserModel.create({ userName, email, password: hashPassword });
-    return res.status(201).json({ message: "success" });
-});
+    const decoded = jwt.verify(token,'asma');
+    if(decoded.role != 'admin'){
+        return res.status(400).json({message:'not authorized'});
+    }
+    return res.json(decoded);
 
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await UserModel.findOne({
-        where: { email: email }
+    const user = await UserModel.findByPk(id);
+    if(user==null){
+        return res.status(404).json({message:"user not found"});
+    }
+
+    await UserModel.destroy({
+        Where:{
+            id
+        }
     });
-    if (user == null) {
-        return res.status(404).json({ message: "invalid email" });
-    }
-
-    const check = await bcrypt.compareSync(password, user.password);
-    if (check == false) {
-        return res.status(400).json({ message: "invalid password" })
-    }
-    const token = jwt.sign({ id:user._id,name:user.userName }, 'asma');
-    return res.status(200).json({ message: "success", token });
+    return res.status(200).json({message:"success"});
 });
+
 
 export default router;
