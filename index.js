@@ -1,13 +1,7 @@
 import express from 'express';
-import { connectDB } from './DB/connection.js';
-import userRouter from './src/modules/user/user.router.js';
-import authRouter from './src/modules/authentication/authentication.router.js'
+import initApp from './src/index.router.js';
+
 const app = express();
-connectDB();
+initApp(app,express);
 
-app.use(express.json());
-
-app.use('/users',userRouter);
-app.use('/auth',authRouter);
-
-app.listen(3000);
+app.listen(4000);

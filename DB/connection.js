@@ -6,11 +6,11 @@ export const sequelize = new Sequelize('ums', 'root', '', {
   });
 
 export const connectDB =()=>{
-    sequelize.sync()
+    sequelize.sync() 
     .then(()=>{
         console.log("connection established");
     })
     .catch((error)=>{
         console.log("error to connect to database" + error);
-    })
-}
+    }) 
+};   
